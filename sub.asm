@@ -3,46 +3,105 @@ global _start
 section .text
 
 _start:
-                sub rsp, 2*512*8
+                sub rsp, 2 * long_size
 
-                lea rdi, [rsp+768]
-                mov rcx, 512
+                lea rdi, [rsp]
+                mov rcx, 256
                 call read_long
 
-                lea rdi, [rsp+256]
+                lea rdi, [rsp + long_size]
                 call read_long
-                
-                add rsp, 2*512*8
+
+                lea rsi, [rsp]
+                lea rdi, [rsp + long_size]
+
+                mov rdx, 256
+                call cmp_long
+
+                jb .sec_greater
+
+                lea rsi, [rsp + long_size]
+                lea rdi, [rsp]
+                call sub_long
+
+                call write_long
+
+                add rsp, 2 * long_size
 
                 jmp exit
 
+.sec_greater:
+                mov rsi, sec_gr_msg
+                mov rdx, sec_gr_msg_size
+                call print_string
+
+                add rsp, 2 * long_size
+                jmp exit
+
+; Substracts a long number from a long number (like a -= b)
+;   rdi -- first long
+;   rcx -- long length
+;   rsi -- second long
+;
+; Result's address is stored in rdi
+sub_long:
+                push            rdi
+                push            rsi
+                push            rcx
+
+                clc
+.loop:
+                mov             rax, [rsi]
+                lea             rsi, [rsi + 8]
+                sbb             [rdi], rax
+                lea             rdi, [rdi + 8]
+                dec             rcx
+                jnz             .loop
+
+                pop             rcx
+                pop             rsi
+                pop             rdi
+                ret
+
 ; compares two long numbers
-;   rsi -- address of the first long num
-;   rdx -- length of the long num in qwords
-;   rdi -- address of the second long num
-;   rcx -- length of the second long num in qwords
+;       rsi -- address of the first long num
+;       rdx -- length of the long num in qwords
+;       rdi -- address of the second long num
+;       rcx -- length of the second long num in qwords
+;
+; Result's stored in flags.
 cmp_long:
                 push rdi
                 push rcx
                 push rsi
                 push rdx
+                push rax
 
                 cmp rdx, rcx
                 jne .exit
 
+                mov rax, 8
+                mul rdx
+                mov r11, rax
+
+                mov rax, 8
+                mul rcx
+                mov r12, rax
+
                 std
-                add rdi, rcx
-                sub rdi, 1
-                add rsi, rdx
-                sub rsi, 1
+                add rdi, r11
+                sub rdi, 8
+                add rsi, r12
+                sub rsi, 8
                 repe cmpsq
+                cld
 .exit:
+                pop rax
                 pop rdx
                 pop rsi
                 pop rcx
                 pop rdi
                 ret
-
 
 ; adds 64-bit number to long number
 ;    rdi -- address of summand #1 (long number)
@@ -302,6 +361,7 @@ print_string:
                 ret
 
 section         .rodata
+long_size               equ     256 * 8
 invalid_char_msg:       db      "Invalid character: "
 invalid_char_msg_size:  equ     $-invalid_char_msg
 sec_gr_msg:             db      "Second argument is greater"
