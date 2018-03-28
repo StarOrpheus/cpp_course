@@ -18,11 +18,13 @@ public:
     big_integer();
     big_integer(big_integer const& x);
     big_integer(int x);
+    big_integer(uint32_t x);
     explicit big_integer(const std::string & str);
     ~big_integer() = default;
 
 
     big_integer& operator=(big_integer const& other) = default;
+    void move(big_integer const& from);
 
     big_integer& operator+=(big_integer const& rhs);
     big_integer& operator-=(big_integer const& rhs);
@@ -30,6 +32,7 @@ public:
     big_integer& operator/=(big_integer const& rhs);
     big_integer& operator%=(big_integer const& rhs);
     std::pair<big_integer, uint32_t > div_mod(uint32_t devidend) const;
+    std::pair<big_integer, big_integer> div_mod(big_integer const& x) const;
 
     big_integer& operator&=(big_integer const& rhs);
     big_integer& operator|=(big_integer const& rhs);
@@ -70,6 +73,10 @@ public:
                                              std::function<uint32_t(uint32_t, uint32_t)> F);
     friend std::vector<uint32_t> get_complement_data(big_integer const& x);
     friend big_integer get_decomplement_data(std::vector<uint32_t> const& x);
+
+    friend big_integer abs(big_integer const& x);
+
+    void swap(big_integer& x);
 };
 
 std::vector<uint32_t> get_complement_data(big_integer const& x);
@@ -102,6 +109,8 @@ bool operator<(big_integer const& a, big_integer const& b);
 bool operator>(big_integer const& a, big_integer const& b);
 bool operator<=(big_integer const& a, big_integer const& b);
 bool operator>=(big_integer const& a, big_integer const& b);
+
+big_integer abs(big_integer const& x);
 
 std::string to_string(big_integer const& a);
 std::ostream& operator<<(std::ostream& s, big_integer const& a);

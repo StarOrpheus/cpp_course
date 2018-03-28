@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 big_integer::big_integer() : big_integer(0) {}
 
@@ -14,10 +15,8 @@ big_integer::big_integer(big_integer const& x) {
     this->sign = x.sign;
 }
 
-big_integer::big_integer(int x) {
-    this->data.resize(1, abs(x));
-    this->sign = (x >= 0);
-}
+big_integer::big_integer(int x) : data(1, (uint32_t) abs(x)), sign(x >= 0) {}
+big_integer::big_integer(uint32_t x) : data(1, x), sign(true) {}
 
 big_integer::big_integer(std::string const& str) {
     if (str.length() == 0) {
@@ -151,17 +150,94 @@ big_integer &big_integer::operator*=(const big_integer &rhs) {
 }
 
 void big_integer::set_zero() {
-    data = std::vector<uint32_t >(1, 0);
-    sign = true;
+    move(big_integer());
 }
 
-big_integer &big_integer::operator/=(const big_integer &rhs) {
-    throw std::runtime_error("Not implemented");
+big_integer abs(big_integer const& x) {
+    big_integer res(x);
+    res.sign = true;
+    return res;
+}
+
+std::pair<big_integer, big_integer> big_integer::div_mod(big_integer const& b) const {
+    const uint32_t max_dig = 0xFFFFFFFF;
+
+    if (b.length() == 1 && b.data[0] == 0) {
+        throw std::runtime_error("Divison by zero");
+    }
+
+    big_integer tempr(*this);
+    tempr.sign ^= (b.sign ^ 1);
+
+    if (b.length() == 1) {
+        auto k = tempr.div_mod(b.data[0]);
+        big_integer c2 = big_integer(k.second);
+        if (!c2.is_zero()) {
+            c2.sign = this->sign;
+        }
+
+        return std::make_pair(std::move(k.first), std::move(c2));
+    }
+
+    big_integer abs_x(abs(tempr));
+    big_integer abs_y(abs(b));
+
+    if (abs_x < abs_y) {
+        tempr.set_zero();
+        return std::make_pair(tempr, tempr); // with move or not??
+    }
+
+    uint32_t f = (((uint64_t) 1) << 32) / ((uint64_t) b.data.back() + 1);
+
+    abs_x *= f;
+    abs_y *= f;
+
+    std::vector<uint32_t> result(abs_x.length() - abs_y.length() + 1);
+
+    big_integer h;
+    uint64_t d1 = abs_y.data.back();
+
+    for (ptrdiff_t k = abs_x.length() - 1; k > abs_x.length() - abs_y.length(); k--) {
+        h <<= 32;
+        h += abs_x.data[k];
+    }
+
+    for (size_t k = abs_x.length() - abs_y.length() + 1; k--;) {
+        h <<= 32;
+        h += abs_x.data[k];
+
+        uint64_t r2 = h.data.back();
+        if (h.length() > abs_y.length()) {
+            r2 <<= 32;
+            r2 += h.data[h.length() - 2];
+        }
+
+        //       quotient
+        uint64_t qt = std::min(r2 / d1, (uint64_t) max_dig);
+        big_integer dq = abs_y * (uint32_t) (qt & max_dig);
+        while (h < dq) {
+            qt--;
+            dq -= abs_y;
+        }
+        result[k] = qt & max_dig;
+        h -= dq;
+    }
+
+    tempr.data = std::move(result);
+    tempr.trim_zeros();
+
+    h.sign = this->sign;
+
+    return std::make_pair(std::move(tempr), std::move(h)); // with move or not??
+};
+
+big_integer& big_integer::operator/=(big_integer const &b) {
+    move(div_mod(b).first);
     return *this;
 }
 
-big_integer &big_integer::operator%=(big_integer const &rhs) {
-    throw std::runtime_error("Not implemented");
+big_integer &big_integer::operator%=(big_integer const &b) {
+    move(div_mod(b).second);
     return *this;
 }
 
@@ -173,6 +249,7 @@ std::pair<big_integer, uint32_t > big_integer::div_mod(uint32_t devidend) const 
     std::pair<big_integer, uint32_t > res;
 
     res.second = 0;
+    res.first.sign = sign;
     res.first.data.resize(length());
 
     for (ptrdiff_t i = length() - 1; i >= 0; i--) {
@@ -182,18 +259,15 @@ std::pair<big_integer, uint32_t > big_integer::div_mod(uint32_t devidend) const 
     }
 
     res.first.trim_zeros();
-
     return res;
 }
 
 big_integer &big_integer::operator&=(big_integer const &rhs) {
-    big_integer tmp = apply_with_complement(*this,
-                                            rhs,
-                                            [] (uint32_t x, uint32_t y) -> uint32_t {
-                                                return x & y;
-                                            });
-    this->data = tmp.data;
-    this->sign = tmp.sign;
+    move(apply_with_complement(*this,
+                               rhs,
+                               [] (uint32_t x, uint32_t y) -> uint32_t {
+                                   return x & y;
+                               }));
 
     if (is_zero()) {
         sign = true;
@@ -203,13 +277,11 @@ big_integer &big_integer::operator&=(big_integer const &rhs) {
 }
 
 big_integer &big_integer::operator|=(big_integer const &rhs) {
-    big_integer tmp = apply_with_complement(*this,
-                                            rhs,
-                                            [] (uint32_t x, uint32_t y) -> uint32_t {
-                                                return x | y;
-                                            });
-    this->data = tmp.data;
-    this->sign = tmp.sign;
+    move(apply_with_complement(*this,
+                               rhs,
+                               [] (uint32_t x, uint32_t y) -> uint32_t {
+                                   return x | y;
+                               }));
 
     if (is_zero()) {
         sign = true;
@@ -219,13 +291,11 @@ big_integer &big_integer::operator|=(big_integer const &rhs) {
 }
 
 big_integer &big_integer::operator^=(big_integer const &rhs) {
-    big_integer tmp = apply_with_complement(*this,
-                                            rhs,
-                                            [] (uint32_t x, uint32_t y) -> uint32_t {
-                                                return x ^ y;
-                                            });
-    this->data = tmp.data;
-    this->sign = tmp.sign;
+    move(apply_with_complement(*this,
+                               rhs,
+                               [] (uint32_t x, uint32_t y) -> uint32_t {
+                                   return x ^ y;
+                               }));
 
     if (is_zero()) {
         sign = true;
@@ -258,9 +328,8 @@ big_integer &big_integer::operator<<=(int rhs) {
         }
     }
 
-    tmp.trim_zeros();
-
-    this->data = std::move(tmp.data);
+    move(tmp);
+    trim_zeros();
 
     return *this;
 }
@@ -269,7 +338,7 @@ big_integer &big_integer::operator>>=(int rhs) {
     std::vector<uint32_t> tmp(get_complement_data(*this));
 
     int c1 = rhs >> 5;
-    int c2 = (rhs << 27) >> 27;
+    int c2 = rhs & 0x1F;
 
     if (c1) {
         for (ptrdiff_t i = 0; i + c1 < length(); i++) {
@@ -293,9 +362,7 @@ big_integer &big_integer::operator>>=(int rhs) {
         tmp[length() - c1 - 1] |= complement;
     }
 
-    big_integer res = get_decomplement_data(tmp);
-    this->data = std::move(res.data);
-    this->sign = res.sign;
+    move(get_decomplement_data(tmp));
 
     trim_zeros();
 
@@ -410,8 +477,8 @@ std::string to_string(big_integer const& a) {
     big_integer tmp(a);
 
     while (!tmp.is_zero()) {
-        std::pair<big_integer, uint32_t > res = tmp.div_mod(10);
-        s += (char) res.second + '0';
+        std::pair<big_integer, int32_t > res = tmp.div_mod(10);
+        s += (char) abs(res.second) + '0';
         tmp = res.first;
     }
 
@@ -545,5 +612,10 @@ big_integer apply_with_complement(big_integer const& x,
     return get_decomplement_data(apply_to_vectors(get_complement_data(x),
                                                      get_complement_data(y),
                                                      F));
+}
+
+void big_integer::move(big_integer const& from) {
+    this->data = std::move(from.data);
+    this->sign = from.sign;
 }
 
