@@ -3,6 +3,9 @@ global _start
 section .text
 
 _start:
+                push rbp
+                mov rbp, rsp
+
                 sub rsp, 7 * long_offset
                          ; 1|2|33|4.44
 
@@ -27,6 +30,8 @@ _start:
                 call write_long
 
                 add rsp, 7 * long_offset
+
+                leave
                 jmp exit
 
 
