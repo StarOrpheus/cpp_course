@@ -3,24 +3,23 @@
 //
 
 #include "big_integer.h"
-#include <stdexcept>
 #include <algorithm>
-#include <string>
 #include <iostream>
 
 big_integer::big_integer() : big_integer(0) {}
 
-big_integer::big_integer(big_integer const& x) {
+big_integer::big_integer(big_integer const &x) {
     this->data = x.data;
     this->sign = x.sign;
 }
 
 big_integer::big_integer(int x) : data(1, (uint32_t) abs(x)), sign(x >= 0) {}
+
 big_integer::big_integer(uint32_t x) : data(1, x), sign(true) {}
 
-big_integer::big_integer(std::string const& str) {
+big_integer::big_integer(std::string const &str) {
     if (str.length() == 0) {
-        throw std::invalid_argument("Non-zero length std::string const& exptected");
+        throw std::invalid_argument("Non-zero length std::string const& expected");
     }
 
     big_integer tmp;
@@ -76,7 +75,7 @@ big_integer &big_integer::operator+=(big_integer const &rhs) {
                 tmp -= carry;
                 tmp -= (i < trhs.length() ? trhs.data[i] : 0);
                 carry = tmp < 0;
-                if (carry) tmp += ((int64_t ) 1ll << 32);
+                if (carry) tmp += ((int64_t) 1ll << 32);
                 data[i] = tmp;
             }
 
@@ -88,7 +87,7 @@ big_integer &big_integer::operator+=(big_integer const &rhs) {
                 tmp -= carry;
                 tmp -= (i < length() ? data[i] : 0);
                 carry = tmp < 0;
-                if (carry) tmp += ((int64_t ) 1ll << 32);
+                if (carry) tmp += ((int64_t) 1ll << 32);
                 trhs.data[i] = tmp;
             }
 
@@ -126,7 +125,7 @@ big_integer &big_integer::operator*=(const big_integer &rhs) {
         return *this; // without allocating ram
     }
 
-    std::vector<uint32_t > tmp(rhs.length() + length(), 0);
+    std::vector<uint32_t> tmp(rhs.length() + length(), 0);
 
     for (int i = 0; i < length(); i++) {
         uint32_t carry = 0;
@@ -153,17 +152,17 @@ void big_integer::set_zero() {
     move(big_integer());
 }
 
-big_integer abs(big_integer const& x) {
+big_integer abs(big_integer const &x) {
     big_integer res(x);
     res.sign = true;
     return res;
 }
 
-std::pair<big_integer, big_integer> big_integer::div_mod(big_integer const& b) const {
+std::pair<big_integer, big_integer> big_integer::div_mod(big_integer const &b) const {
     const uint32_t max_dig = 0xFFFFFFFF;
 
     if (b.length() == 1 && b.data[0] == 0) {
-        throw std::runtime_error("Divison by zero");
+        throw std::runtime_error("Division by zero");
     }
 
     big_integer tempr(*this);
@@ -231,7 +230,7 @@ std::pair<big_integer, big_integer> big_integer::div_mod(big_integer const& b) c
     return std::make_pair(std::move(tempr), std::move(h)); // with move or not??
 };
 
-big_integer& big_integer::operator/=(big_integer const &b) {
+big_integer &big_integer::operator/=(big_integer const &b) {
     move(div_mod(b).first);
     return *this;
 }
@@ -241,12 +240,12 @@ big_integer &big_integer::operator%=(big_integer const &b) {
     return *this;
 }
 
-std::pair<big_integer, uint32_t > big_integer::div_mod(uint32_t devidend) const {
-    if (devidend == 0) {
+std::pair<big_integer, uint32_t> big_integer::div_mod(uint32_t dividend) const {
+    if (dividend == 0) {
         throw std::invalid_argument("Division by zero: second argument is 0");
     }
 
-    std::pair<big_integer, uint32_t > res;
+    std::pair<big_integer, uint32_t> res;
 
     res.second = 0;
     res.first.sign = sign;
@@ -254,8 +253,8 @@ std::pair<big_integer, uint32_t > big_integer::div_mod(uint32_t devidend) const 
 
     for (ptrdiff_t i = length() - 1; i >= 0; i--) {
         uint64_t cur = data[i] + ((res.second * ((uint64_t) 1)) << 32);
-        res.first.data[i] = cur / devidend;
-        res.second = cur % devidend;
+        res.first.data[i] = cur / dividend;
+        res.second = cur % dividend;
     }
 
     res.first.trim_zeros();
@@ -265,7 +264,7 @@ std::pair<big_integer, uint32_t > big_integer::div_mod(uint32_t devidend) const 
 big_integer &big_integer::operator&=(big_integer const &rhs) {
     move(apply_with_complement(*this,
                                rhs,
-                               [] (uint32_t x, uint32_t y) -> uint32_t {
+                               [](uint32_t x, uint32_t y) -> uint32_t {
                                    return x & y;
                                }));
 
@@ -279,7 +278,7 @@ big_integer &big_integer::operator&=(big_integer const &rhs) {
 big_integer &big_integer::operator|=(big_integer const &rhs) {
     move(apply_with_complement(*this,
                                rhs,
-                               [] (uint32_t x, uint32_t y) -> uint32_t {
+                               [](uint32_t x, uint32_t y) -> uint32_t {
                                    return x | y;
                                }));
 
@@ -293,7 +292,7 @@ big_integer &big_integer::operator|=(big_integer const &rhs) {
 big_integer &big_integer::operator^=(big_integer const &rhs) {
     move(apply_with_complement(*this,
                                rhs,
-                               [] (uint32_t x, uint32_t y) -> uint32_t {
+                               [](uint32_t x, uint32_t y) -> uint32_t {
                                    return x ^ y;
                                }));
 
@@ -408,15 +407,15 @@ big_integer big_integer::operator--(int) {
     return tmp;
 }
 
-bool operator==(big_integer const& a, big_integer const& b) {
+bool operator==(big_integer const &a, big_integer const &b) {
     return a.sign == b.sign && a.data == b.data;
 }
 
-bool operator!=(big_integer const& a, big_integer const& b) {
+bool operator!=(big_integer const &a, big_integer const &b) {
     return a.sign != b.sign || a.data != b.data;
 }
 
-bool operator<(big_integer const& a, big_integer const& b) {
+bool operator<(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return !a.sign; }
     if (a.length() != b.length()) { return a.length() < b.length(); }
 
@@ -429,7 +428,7 @@ bool operator<(big_integer const& a, big_integer const& b) {
     return false;
 }
 
-bool operator>(big_integer const& a, big_integer const& b) {
+bool operator>(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return a.sign; }
     if (a.length() != b.length()) { return a.length() > b.length(); }
 
@@ -442,7 +441,7 @@ bool operator>(big_integer const& a, big_integer const& b) {
     return false;
 }
 
-bool operator<=(big_integer const& a, big_integer const& b) {
+bool operator<=(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return !a.sign; }
     if (a.length() != b.length()) { return a.length() < b.length(); }
 
@@ -455,7 +454,7 @@ bool operator<=(big_integer const& a, big_integer const& b) {
     return true;
 }
 
-bool operator>=(big_integer const& a, big_integer const& b) {
+bool operator>=(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return a.sign; }
     if (a.length() != b.length()) { return a.length() > b.length(); }
 
@@ -468,7 +467,7 @@ bool operator>=(big_integer const& a, big_integer const& b) {
     return true;
 }
 
-std::string to_string(big_integer const& a) {
+std::string to_string(big_integer const &a) {
     if (a.is_zero()) {
         return "0";
     }
@@ -477,7 +476,7 @@ std::string to_string(big_integer const& a) {
     big_integer tmp(a);
 
     while (!tmp.is_zero()) {
-        std::pair<big_integer, int32_t > res = tmp.div_mod(10);
+        std::pair<big_integer, uint32_t> res = tmp.div_mod(10);
         s += (char) abs(res.second) + '0';
         tmp = res.first;
     }
@@ -491,7 +490,7 @@ std::string to_string(big_integer const& a) {
     return s;
 }
 
-std::ostream& operator<<(std::ostream& s, big_integer const& a) {
+std::ostream &operator<<(std::ostream &s, big_integer const &a) {
     return s << to_string(a);
 }
 
@@ -499,42 +498,42 @@ bool big_integer::is_zero() const {
     return length() == 1 && data[0] == 0;
 }
 
-big_integer operator+(big_integer a, big_integer const& b) {
+big_integer operator+(big_integer a, big_integer const &b) {
     a += b;
     return a;
 }
 
-big_integer operator-(big_integer a, big_integer const& b) {
+big_integer operator-(big_integer a, big_integer const &b) {
     a -= b;
     return a;
 }
 
-big_integer operator*(big_integer a, big_integer const& b) {
+big_integer operator*(big_integer a, big_integer const &b) {
     a *= b;
     return a;
 }
 
-big_integer operator/(big_integer a, big_integer const& b) {
+big_integer operator/(big_integer a, big_integer const &b) {
     a /= b;
     return a;
 }
 
-big_integer operator%(big_integer a, big_integer const& b) {
+big_integer operator%(big_integer a, big_integer const &b) {
     a %= b;
     return a;
 }
 
-big_integer operator&(big_integer a, big_integer const& b) {
+big_integer operator&(big_integer a, big_integer const &b) {
     a &= b;
     return a;
 }
 
-big_integer operator|(big_integer a, big_integer const& b) {
+big_integer operator|(big_integer a, big_integer const &b) {
     a |= b;
     return a;
 }
 
-big_integer operator^(big_integer a, big_integer const& b) {
+big_integer operator^(big_integer a, big_integer const &b) {
     a ^= b;
     return a;
 }
@@ -552,11 +551,11 @@ size_t big_integer::length() const {
     return data.size();
 }
 
-std::vector<uint32_t > big_integer::get_data() const {
+std::vector<uint32_t> big_integer::get_data() const {
     return data;
 }
 
-std::vector<uint32_t> get_complement_data(big_integer const& x) {
+std::vector<uint32_t> get_complement_data(big_integer const &x) {
     if (x.sign) {
         return x.data;
     }
@@ -572,7 +571,7 @@ std::vector<uint32_t> get_complement_data(big_integer const& x) {
     return std::move(tmp.data);
 }
 
-big_integer get_decomplement_data(std::vector<uint32_t> const& x) {
+big_integer get_decomplement_data(std::vector<uint32_t> const &x) {
     if (x.back() & (1 << 31)) {
         big_integer tmp;
         tmp.data = x;
@@ -591,10 +590,10 @@ big_integer get_decomplement_data(std::vector<uint32_t> const& x) {
     }
 }
 
-std::vector<uint32_t> apply_to_vectors(std::vector<uint32_t> const& x,
-                                      std::vector<uint32_t> const& y,
-                                      std::function<uint32_t(uint32_t, uint32_t)> F) {
-    std::vector<uint32_t > tmp(x);
+std::vector<uint32_t> apply_to_vectors(std::vector<uint32_t> const &x,
+                                       std::vector<uint32_t> const &y,
+                                       std::function<uint32_t(uint32_t, uint32_t)> F) {
+    std::vector<uint32_t> tmp(x);
     if (tmp.size() < y.size()) {
         tmp.resize(y.size(), 0);
     }
@@ -606,12 +605,12 @@ std::vector<uint32_t> apply_to_vectors(std::vector<uint32_t> const& x,
     return tmp;
 }
 
-big_integer apply_with_complement(big_integer const& x,
-                                  big_integer const& y,
+big_integer apply_with_complement(big_integer const &x,
+                                  big_integer const &y,
                                   std::function<uint32_t(uint32_t, uint32_t)> F) {
     return get_decomplement_data(apply_to_vectors(get_complement_data(x),
-                                                     get_complement_data(y),
-                                                     F));
+                                                  get_complement_data(y),
+                                                  std::move(F)));
 }
 
 void big_integer::move(big_integer const& from) {
