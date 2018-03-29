@@ -477,7 +477,7 @@ std::string to_string(big_integer const &a) {
 
     while (!tmp.is_zero()) {
         std::pair<big_integer, uint32_t> res = tmp.div_mod(10);
-        s += (char) abs(res.second) + '0';
+        s += (char) res.second + '0';
         tmp = res.first;
     }
 
