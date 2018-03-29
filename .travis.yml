@@ -1,28 +1,64 @@
 language: cpp
 
-addons:
-  apt:
-    sources: 
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.9
-      - g++-5
-
 matrix:
   include:
     - os: linux
-      sudo: false
-      env: GCC_VER="4.9"
-      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    # works on Precise and Trusty
     - os: linux
-      sudo: false
-      env: GCC_VER="5"
-      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
     - os: osx
-      compiler: clang
       osx_image: xcode8
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc5 && CC=gcc-5 && CXX=g++-5"
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
 
 script:
-  - cmake -DCMAKE_BUILD_TYPE=Release ./big_integer/
+  - cmake -D CMAKE_BUILD_TYPE:STRING=Release ./big_integer/
   - cmake --build . -- -j2
   - ./big_integer_testing
