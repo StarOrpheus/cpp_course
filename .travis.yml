@@ -1,0 +1,28 @@
+language: cpp
+
+addons:
+  apt:
+    sources: 
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.9
+      - g++-5
+
+matrix:
+  include:
+    - os: linux
+      sudo: false
+      env: GCC_VER="4.9"
+      compiler: gcc
+    - os: linux
+      sudo: false
+      env: GCC_VER="5"
+      compiler: gcc
+    - os: osx
+      compiler: clang
+      osx_image: xcode8
+
+script:
+  - cmake -DCMAKE_BUILD_TYPE=Release ./big_integer/
+  - cmake --build ./big_integer/ -- -j2
+  - ./big_integer_testing
