@@ -1,4 +1,4 @@
-//
+    //
 // Created by starorpheus on 15/03/18.
 //
 
@@ -196,7 +196,7 @@ std::pair<big_integer, big_integer> big_integer::div_mod(big_integer const &b) c
     big_integer h;
     uint64_t d1 = abs_y.data.back();
 
-    for (ptrdiff_t k = abs_x.length() - 1; k > abs_x.length() - abs_y.length(); k--) {
+    for (std::ptrdiff_t k = abs_x.length() - 1; k > abs_x.length() - abs_y.length(); k--) {
         h <<= 32;
         h += abs_x.data[k];
     }
@@ -251,7 +251,7 @@ std::pair<big_integer, uint32_t> big_integer::div_mod(uint32_t dividend) const {
     res.first.sign = sign;
     res.first.data.resize(length());
 
-    for (ptrdiff_t i = length() - 1; i >= 0; i--) {
+    for (std::ptrdiff_t i = length() - 1; i >= 0; i--) {
         uint64_t cur = data[i] + ((res.second * ((uint64_t) 1)) << 32);
         res.first.data[i] = cur / dividend;
         res.second = cur % dividend;
@@ -311,7 +311,7 @@ big_integer &big_integer::operator<<=(int rhs) {
     int c2 = (rhs << 27) >> 27;
 
     if (c1) {
-        for (ptrdiff_t i = length() + c1 - 1; i >= (rhs >> 5); i--) {
+        for (std::ptrdiff_t i = length() + c1 - 1; i >= (rhs >> 5); i--) {
             tmp.data[i] = tmp.data[i - c1];
         }
 
@@ -321,7 +321,7 @@ big_integer &big_integer::operator<<=(int rhs) {
     }
 
     if (c2) {
-        for (ptrdiff_t i = length() + c1 - 1; i >= 0; i--) {
+        for (std::ptrdiff_t i = length() + c1 - 1; i >= 0; i--) {
             tmp.data[i + 1] |= (tmp.data[i] >> (32 - c2));
             tmp.data[i] <<= c2;
         }
@@ -340,18 +340,18 @@ big_integer &big_integer::operator>>=(int rhs) {
     int c2 = rhs & 0x1F;
 
     if (c1) {
-        for (ptrdiff_t i = 0; i + c1 < length(); i++) {
+        for (std::ptrdiff_t i = 0; i + c1 < length(); i++) {
             tmp[i] = tmp[i + c1];
         }
 
-        for (ptrdiff_t i = length() - c1; i < length(); i++) {
+        for (std::ptrdiff_t i = length() - c1; i < length(); i++) {
             tmp[i] = (tmp[length() - 1] >> 31) ? 0xFFFFFFFF : 0;
         }
     }
 
     if (c2) {
         uint32_t complement = (tmp.back() >> (32 - c2)) << (32 - c2);
-        for (ptrdiff_t i = 0; i < length() - c1; i++) {
+        for (std::ptrdiff_t i = 0; i < length() - c1; i++) {
             if (i) {
                 tmp[i - 1] |= (tmp[i] << (32 - c2));
             }
@@ -419,7 +419,7 @@ bool operator<(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return !a.sign; }
     if (a.length() != b.length()) { return a.length() < b.length(); }
 
-    for (ptrdiff_t i = a.length() - 1; i >= 0; i--) {
+    for (std::ptrdiff_t i = a.length() - 1; i >= 0; i--) {
         if (a.data[i] != b.data[i]) {
             return a.data[i] < b.data[i];
         }
@@ -432,7 +432,7 @@ bool operator>(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return a.sign; }
     if (a.length() != b.length()) { return a.length() > b.length(); }
 
-    for (ptrdiff_t i = a.length() - 1; i >= 0; i--) {
+    for (std::ptrdiff_t i = a.length() - 1; i >= 0; i--) {
         if (a.data[i] != b.data[i]) {
             return a.data[i] > b.data[i];
         }
@@ -445,7 +445,7 @@ bool operator<=(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return !a.sign; }
     if (a.length() != b.length()) { return a.length() < b.length(); }
 
-    for (ptrdiff_t i = a.length() - 1; i >= 0; i--) {
+    for (std::ptrdiff_t i = a.length() - 1; i >= 0; i--) {
         if (a.data[i] != b.data[i]) {
             return a.data[i] < b.data[i];
         }
@@ -458,7 +458,7 @@ bool operator>=(big_integer const &a, big_integer const &b) {
     if (a.sign != b.sign) { return a.sign; }
     if (a.length() != b.length()) { return a.length() > b.length(); }
 
-    for (ptrdiff_t i = a.length() - 1; i >= 0; i--) {
+    for (std::ptrdiff_t i = a.length() - 1; i >= 0; i--) {
         if (a.data[i] != b.data[i]) {
             return a.data[i] > b.data[i];
         }
