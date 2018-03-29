@@ -6,7 +6,9 @@
 #define PROJECT_BIG_INT_H
 
 
-#include <bits/unique_ptr.h>
+#include <memory>
+using std::shared_ptr;
+
 #include <vector>
 #include <functional>
 
