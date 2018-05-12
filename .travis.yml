@@ -1,0 +1,131 @@
+language: cpp
+
+rvm:
+  - 2.3
+
+env:
+  global:
+    - secure: "YcWonah0NW7rQWNxPOTB_Q"
+    - secure: "RpVmIvRFiSbnwuFxHMNvm8OabfpR/LMRbyycqq1mqQzA239EoZvIKuzBjJa/ZHgKk4jrY1I3FMZDxiB/z/kU8JhC76qfVYj7CZ33JNj95zkWsccGABzg4QvxSxHYx4mxdPOCihdGj7g/TPBHQ8RL+YEvMZHa50/shJEE9P8JarYvauLDca2vgcyZ3xoo0UcE+Cawlwm5f7vZ4Z3uN1vl0pZ+Gm77xSUhlC5/GD2NsaLOplOPuXp53D9DWvFUUJ8S/5m9G0IPQm0RRX+jVkztDUnTQ0tGmRxG3+aK5XG5wwd0H/t8vHtYD882fdc83ncZQMY90Fz1NIeQ+DLhyF++jwv7PmYC9WE7CQcxazPSQB+Izl/JSGKm+bBjSHPsrZA9e1mXP8TFrq94A3NDHCjfCnoMH02qSICrzLrWomDGmipmcZmNmB/oSdSMVD1qbJRgcqY1hgHJEQzlw3q6J4RAXGOHfY6Pl4yXopyl9u6g5OKrHJItj7E2XYFVPUmA1RD9ePzoQ2wCy3rHKgSJynaUr0qdcyPoqW0HRmsbwkxHpgJQpfeKFHeGj19w+OQZa2htKKOU4xzop3SrOWUz6Y3G5s4xqYRRKfO7yKM7e0eZqflpcRxOI3medObuj2hWg4b6fZUY+uF9G2buC86PNGHa5lznBh4XgjNkliVIQuJ9QuY="
+
+
+install: 
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew upgrade; brew update; fi
+
+addons:
+  coverity_scan:
+    project:
+      name: "StarOrpheus/cpp_course"
+      description: "Build submitted via Travis CI"
+    notification_email: ellesterate@gmail.com
+    build_command_prepend: "cmake -D CMAKE_BUILD_TYPE:STRING=Release ./big_integer/"
+    build_command:   "cmake --build . -- -j2"
+    branch_pattern: .*
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+      
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    # Stupid travis has issues with homebrew.
+    # - os: osx
+    #   osx_image: xcode8
+    #   env:
+    #     - MATRIX_EVAL="brew install gcc5 && CC=gcc-5 && CXX=g++-5"
+        
+    # - os: osx
+    #   osx_image: xcode8
+    #   env:
+    #     - MATRIX_EVAL="brew install gcc6 && CC=gcc-6 && CXX=g++-6"
+
+    # - os: osx
+    #   osx_image: xcode8
+    #   env:
+    #     - MATRIX_EVAL="brew install gcc && CC=gcc-7 && CXX=g++-7"
+
+    - os: osx
+      osx_image: xcode6.4
+      compiler: clang
+      env:
+        - MATRIX_EVAL="CXX=clang++"
+
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+      env:
+        - MATRIX_EVAL="CXX=clang++"
+
+    - os: osx
+      osx_image: xcode8.3
+      compiler: clang
+      env:
+        - MATRIX_EVAL="CXX=clang++"
+
+    - os: osx
+      osx_image: xcode9.2
+      compiler: clang
+      env:
+        - MATRIX_EVAL="CXX=clang++"
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
+
+script:
+  - cmake -D CMAKE_BUILD_TYPE:STRING=Release ./big_integer/
+  - cmake --build . -- -j2
+  - ./big_integer_testing

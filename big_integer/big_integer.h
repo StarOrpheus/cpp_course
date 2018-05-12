@@ -6,26 +6,30 @@
 #define PROJECT_BIG_INT_H
 
 
-#include <bits/unique_ptr.h>
+#include <memory>
+using std::shared_ptr;
+
 #include <vector>
 #include <functional>
 
 class big_integer {
-    std::vector<uint32_t > data;
+    std::vector<uint32_t > m_data;
 public:
     bool sign;
 
     big_integer();
     big_integer(big_integer const& x);
+    big_integer(big_integer && x);
     big_integer(int x);
     big_integer(uint32_t x);
     explicit big_integer(const std::string & str);
     ~big_integer() = default;
 
     big_integer& operator=(big_integer const& other) = default;
+    big_integer& operator=(big_integer && other);
 
     /**
-     * Steals data from another big_integer
+     * Steals m_data from another big_integer
      * @param from Source
      */
     void move(big_integer const& from);

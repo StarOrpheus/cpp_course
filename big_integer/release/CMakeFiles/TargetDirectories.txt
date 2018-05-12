@@ -1,0 +1,3 @@
+/home/starorpheus/Devel/cpp_course/big_integer/release/CMakeFiles/rebuild_cache.dir
+/home/starorpheus/Devel/cpp_course/big_integer/release/CMakeFiles/big_integer_testing.dir
+/home/starorpheus/Devel/cpp_course/big_integer/release/CMakeFiles/edit_cache.dir
