@@ -62,6 +62,9 @@ public:
     typedef T * iterator;
     typedef T const* const_iterator;
 
+    typedef std::reverse_iterator<iterator > reverse_iterator;
+    typedef std::reverse_iterator<const_iterator > const_reverse_iterator;
+
     vector() noexcept : m_ptr(nullptr), sz(0), cap(0) {}
 
     explicit vector(size_t t_size) : vector() {
@@ -74,10 +77,17 @@ public:
         }
     }
 
-    vector(vector<T> const& rhs) : m_ptr((T*) operator new(sizeof(T) * rhs.sz)), sz(rhs.sz), cap(rhs.sz) {
-        for (size_t i = 0; i < sz; ++i) {
-            new (m_ptr + i) T(rhs[i]);
+//    vector(vector<T> const& rhs) : m_ptr((T*) operator new(sizeof(T) * rhs.sz)), sz(rhs.sz), cap(rhs.sz) {
+    vector(vector<T> const& rhs) : m_ptr(nullptr), sz(0), cap(0) {
+        vector<T> tmp;
+        tmp.reserve(rhs.size());
+        for (size_t i = 0; i < rhs.size(); ++i) {
+            new (tmp.m_ptr + i) T(rhs[i]);
         }
+
+        tmp.sz = rhs.size();
+
+        swap(tmp, *this);
     }
 
     template<typename Type, typename II>
@@ -105,7 +115,9 @@ public:
 
     vector<T>& operator=(vector<int> const& rhs) {
         vector<T> tmp(rhs);
-        swap(*this, rhs);
+        swap(*this, tmp);
+
+        return *this;
     }
 
     ~vector() {
@@ -120,12 +132,28 @@ public:
         return m_ptr;
     }
 
+    reverse_iterator rbegin() {
+        return end();
+    }
+
+    const_reverse_iterator rbegin() const {
+        return end();
+    }
+
     iterator end() {
         return m_ptr + sz;
     }
 
     const_iterator end() const {
         return m_ptr + sz;
+    }
+
+    reverse_iterator rend() {
+        return m_ptr;
+    }
+
+    const_reverse_iterator rend() const {
+        return m_ptr;
     }
 
     size_t size() const {
@@ -194,6 +222,7 @@ public:
     }
 
     void pop_back() {
+        m_ptr[sz-1].~T();
         sz = std::max(sz - 1, static_cast<size_t >(0));
     }
 
@@ -250,7 +279,7 @@ public:
         sz = 0;
     }
 
-    void insert(const_iterator t_pos, T const& val) {
+    iterator insert(const_iterator t_pos, T const& val) {
         vector<T> tmp(*this);
         size_t pos = t_pos - tmp.m_ptr;
         T tmp_val(val);
@@ -262,6 +291,36 @@ public:
 
         tmp.m_ptr[pos] = tmp_val;
         swap(*this, tmp);
+
+        return m_ptr + pos;
+    }
+
+    iterator erase(const_iterator pos) {
+        auto next_p = pos;
+        next_p++;
+
+        return erase(pos, next_p);
+    }
+
+    iterator erase(const_iterator first, const_iterator last) {
+        vector<T> tmp;
+        size_t  pos = first - m_ptr;
+
+        tmp.reserve(sz - (last - first));
+
+        const_iterator iter = m_ptr;
+        while (iter != first) {
+            tmp.push_back(*iter);
+            ++iter;
+        }
+
+        while (last != end()) {
+            tmp.push_back(*last);
+            ++last;
+        }
+
+        swap(*this, tmp);
+        return m_ptr + pos;
     }
 
     void reserve(size_t n) {
