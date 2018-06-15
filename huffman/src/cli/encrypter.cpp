@@ -29,11 +29,6 @@ char char_buf[char_buf_sz ];
 
 
 int main(int argc, char** argv) {
-//#ifdef _GLIBCXX_DEBUG
-//    fclose(stderr);
-//    fclose(stdout);
-//#endif
-
     clock_t start = clock();
 
     if (argc != 4) {
@@ -48,13 +43,8 @@ int main(int argc, char** argv) {
     read_and_count(f_counter);
     fprintf(stderr, "OK hash=%zu\n", hash(f_counter));
 
-    fprintf(stderr, "Building tree.. ");
     h_tree tr(f_counter);
-    fprintf(stderr, "OK\n");
-
-    fprintf(stderr, "Building code table.. ");
     encrypter encr(tr);
-    fprintf(stderr, "OK\n");
 
     input.reset(except_fopen(input_f_name, "r"));
     output.reset(except_fopen(output_f_name, "w"));
@@ -91,7 +81,7 @@ int main(int argc, char** argv) {
     }
 
     except_fwrite(&last_byte_bits_used, 1, output.get(), bytes_written);
-    fprintf(stderr, "Done! Bytes written: %zu, in %.5Lfsec\n", bytes_written,
+    fprintf(stdout, "Done! Bytes written: %zu, in %.5Lfsec\n", bytes_written,
             (clock() - start) / static_cast<long double>(CLOCKS_PER_SEC));
 
     return 0;

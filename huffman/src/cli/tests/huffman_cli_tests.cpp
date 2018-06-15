@@ -63,15 +63,21 @@ void eq_files(string const& fname1, string const& fname2) {
     fputs(("Okay, files " + fname1 + " " + fname2 + " are equal.\n").data(), stderr);
 }
 
+#define __STR_IMPL__(S) #S
+#define __STR__(S) __STR_IMPL__(S)
+
+const string encrypter_exec(__STR__(__ENCRYPTER_EXEC));
+const string decrypter_exec(__STR__(__DECRYPTER_EXEC));
+
 TEST(cli_common, cyphers) {
     string input = make_file("0123456789");
     string huf_name = input + ".huf";
     string decr_name = input + ".decr";
     auto_delete ac(input);
 
-    system(("/home/starorpheus/Devel/huffman/cmake-build-debug/src/cli/encrypter "
+    system((encrypter_exec + " "
             + input + " -o " + huf_name).data());
-    system(("/home/starorpheus/Devel/huffman/cmake-build-debug/src/cli/decrypter "
+    system((decrypter_exec + " "
             + huf_name + " -o " + decr_name).data());
 
     eq_files(input, decr_name);
@@ -91,9 +97,9 @@ TEST(cli_common, ascii_table) {
     string huf_name = input + ".huf";
     string decr_name = input + ".decr";
 
-    system(("/home/starorpheus/Devel/huffman/cmake-build-debug/src/cli/encrypter "
+    system((encrypter_exec + " "
             + input + " -o " + huf_name).data());
-    system(("/home/starorpheus/Devel/huffman/cmake-build-debug/src/cli/decrypter "
+    system((decrypter_exec + " "
             + huf_name + " -o " + decr_name).data());
 
     eq_files(input, decr_name);
@@ -107,7 +113,7 @@ TEST(cli_common, lengths_randomized) {
     string data;
     data.reserve(10000);
 
-    for (size_t len = 0; len < 10000; ++len) {
+    for (size_t len = 0; len < 1000; len += 10) {
         for (uint32_t i = 0; i < len; ++i) {
             data.push_back(static_cast<char>((rand() % 256)));
         }
@@ -116,10 +122,8 @@ TEST(cli_common, lengths_randomized) {
         string huf_name = input + ".huf";
         string decr_name = input + ".decr";
 
-        system(("/home/starorpheus/Devel/huffman/cmake-build-debug/src/cli/encrypter "
-                + input + " -o " + huf_name).data());
-        system(("/home/starorpheus/Devel/huffman/cmake-build-debug/src/cli/decrypter "
-                + huf_name + " -o " + decr_name).data());
+        system((encrypter_exec + " " + input + " -o " + huf_name).data());
+        system((decrypter_exec + " " + huf_name + " -o " + decr_name).data());
 
         eq_files(input, decr_name);
 

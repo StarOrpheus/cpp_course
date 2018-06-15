@@ -27,11 +27,6 @@ const size_t char_buf_sz = 4096;
 char char_buf[char_buf_sz];
 
 int main(int argc, char ** argv) {
-//#ifdef _GLIBCXX_DEBUG
-//    fclose(stderr);
-//    fclose(stdout);
-//#endif
-
     clock_t start = clock();
 
     if (argc != 4) {
@@ -54,13 +49,8 @@ int main(int argc, char ** argv) {
     freq_counter f_counter(const_cast<size_t const *>(reinterpret_cast<size_t *> (char_buf)));
     fprintf(stderr, "OK hash=%zu\n", hash(f_counter));
 
-    fprintf(stderr, "Building tree.. ");
     h_tree tr(f_counter);
-    fprintf(stderr, "OK\n");
-
-    fprintf(stderr, "Building H-Tree DFA and decrypter.. ");
     decrypter decr(tr);
-    fprintf(stderr, "OK\n");
 
     fprintf(stderr, "Starting decryption.. ");
     dynamic_bitset::BlockT last_block = 0;
