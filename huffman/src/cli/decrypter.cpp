@@ -5,7 +5,7 @@
 #include <memory>
 #include <cassert>
 #include <vector>
-#include <debug/vector>
+#include <vector>
 
 #include "include/utils.h"
 #include "../huffman_lib/include/utils.h"
