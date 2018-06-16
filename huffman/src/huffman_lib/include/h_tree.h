@@ -19,7 +19,7 @@ using std::vector;
 
 class h_tree {
 protected:
-    struct __node {
+    struct tree_node {
         uint32_t left;
         uint32_t right;
 
@@ -27,27 +27,27 @@ protected:
         symbol c;
         bool terminal;
 
-        __node();
+        tree_node();
 
-        __node(uint32_t left, uint32_t right,
+        tree_node(uint32_t left, uint32_t right,
                uint32_t weight, symbol c, bool terminal);
     };
 
     struct __code_table_generator {
         dynamic_bitset & buffer;
         vector<dynamic_bitset> & result;
-        vector<__node> const& g;
+        vector<tree_node> const& g;
 
         __code_table_generator(dynamic_bitset &buffer,
-                                vector<dynamic_bitset> &result,
-                                vector<__node> const& g);
+                               vector<dynamic_bitset> &result,
+                               vector<tree_node> const& g);
 
         void operator()(uint32_t);
     };
 
     static const uint32_t devil_vertex;
 
-    vector<__node> g;
+    vector<tree_node> g;
     uint32_t root;
 
 public:
