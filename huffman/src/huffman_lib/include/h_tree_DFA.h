@@ -15,31 +15,35 @@ class h_tree_DFA {
 public:
     struct DFA_step {
         uint32_t destination = h_tree::devil_vertex;
-        vector<symbol> visited_symbols;
+        bool symbol_achieved;
+        symbol c;
+        uint8_t skipped_bits = 0;
 
-        DFA_step(uint32_t destination, const vector<symbol> &visited_symbols);
+        DFA_step(uint32_t destination, bool symbol_achieved, symbol c, uint8_t skipped_bits);
+
         DFA_step();
     };
 
 private:
     h_tree const& m_tr;
-    vector<vector<DFA_step > > edges;
+    vector<DFA_step > edges;
+    uint32_t current_vertex;
 
 public:
 
     explicit h_tree_DFA(const h_tree &m_tr);
 
     const uint32_t root() const;
+    const uint32_t condition() const;
 
-    const DFA_step & go(uint32_t vertex_dicriptor,
-                        uint8_t data);
+    const DFA_step & root_go(uint16_t way);
 
-    DFA_step bit_go(uint32_t vertex_dicriptor,
-                    dynamic_bitset const &way);
+    // overloaded to skip unnecessary dynamic_bitset instances and
+    void bit_go(dynamic_bitset const &way, std::vector<symbol> &result);
+    DFA_step bit_go(uint16_t way);
+    DFA_step bit_go(uint8_t way);
+    DFA_step bit_go(bool way);
 
-    // overloaded to skip unnecessary dynamic_bitset instances
-    DFA_step bit_go(uint32_t cur_v,
-                    uint8_t way);
 };
 
 

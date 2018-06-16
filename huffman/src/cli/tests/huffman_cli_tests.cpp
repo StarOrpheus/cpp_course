@@ -14,8 +14,8 @@ string make_file(string const& data) {
 
     unique_ptr<std::FILE, FILE_deleter> file(except_fopen(filename.data(), "w"));
 
-    if (size_t tmp = fwrite(data.data(), 1, data.size(), file.get()); tmp != data.size()) {
-        int error = ferror(file.get());
+    size_t tmp = fwrite(data.data(), 1, data.size(), file.get());
+    if (tmp != data.size()) {
         perror("The folowwing error occured: ");
         throw std::runtime_error("Write error.");
     }
@@ -48,7 +48,7 @@ void eq_files(string const& fname1, string const& fname2) {
                               && (read2 = fread(buf2, 1, 256, file2.get())); ) {
         for (size_t i = 0; i < std::min(read1, read2); ++i) {
             if (buf1[i] != buf2[i]) {
-                throw std::runtime_error("Files differ on byte: " + std::to_string(iter));
+                throw std::runtime_error("Files " + fname1 + " and " + fname2 + " differ on byte: " + std::to_string(iter));
             }
 
             ++iter;

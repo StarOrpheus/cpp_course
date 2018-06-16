@@ -293,11 +293,7 @@ bool test_dfa(string const& test_str) {
     buf.truncate();
     decr.naive_decrypt(buf, s2);
 
-    if (test_str.size() != s2.size()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < s2.size(); ++i) {
+    for (size_t i = 0; i < std::min(s2.size(), test_str.size()); ++i) {
         if (test_str[i] != s2[i]) {
             return false;
         }
@@ -306,25 +302,49 @@ bool test_dfa(string const& test_str) {
     return true;
 }
 
-TEST(correctness, one_dig) {
-    const string s1 = "0";
+bool test_dfa_separate(string const& test_str) {
+    freq_counter counter;
+    counter.count(reinterpret_cast<const symbol *>(test_str.data()),
+                  test_str.size());
 
-    ASSERT_TRUE(test_naive(s1));
-    ASSERT_TRUE(test_dfa(s1));
+    h_tree tr(counter);
+
+    encrypter encr(tr);
+    decrypter decr(tr);
+
+    dynamic_bitset buf;
+    encr.encrypt(reinterpret_cast<const symbol *>(test_str.data()),
+                 test_str.size(),
+                 buf);
+
+    vector<symbol > s2;
+
+    const size_t offset = buf.full_blocks() * sizeof(dynamic_bitset::BlockT) / 8;
+
+    for (size_t i = 0; i < 8; i++) {
+        decr.decrypt(static_cast<void const *>(buf.data()) + i * offset, offset, s2);
+    }
+
+    buf.truncate();
+    decr.naive_decrypt(buf, s2);
+
+    for (size_t i = 0; i < std::min(s2.size(), test_str.size()); ++i) {
+        if (test_str[i] != s2[i]) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
-TEST(correctness, one_symb_limits) {
-    string s1;
-    s1.push_back(char(0));
-
-    ASSERT_TRUE(test_naive(s1));
-    ASSERT_TRUE(test_dfa(s1));
-
-    s1.clear();
-    s1.push_back(char(255));
-
-    ASSERT_TRUE(test_naive(s1));
-    ASSERT_TRUE(test_dfa(s1));
+TEST(correctness, single_symb) {
+    string s;
+    for (uint32_t c = 0; c <= std::numeric_limits<symbol >::max(); c++) {
+        s.push_back(static_cast<char>(c));
+        ASSERT_TRUE(test_naive(s));
+        ASSERT_TRUE(test_dfa(s));
+        s.pop_back();
+    }
 }
 
 TEST(correctness, simple_digits) {
@@ -332,6 +352,7 @@ TEST(correctness, simple_digits) {
 
     ASSERT_TRUE(test_naive(s1));
     ASSERT_TRUE(test_dfa(s1));
+    ASSERT_TRUE(test_dfa_separate(s1));
 }
 
 TEST(correctness, lilechka) {
@@ -405,4 +426,5 @@ TEST(correctness, lilechka) {
 
     ASSERT_TRUE(test_naive(s1));
     ASSERT_TRUE(test_dfa(s1));
+    ASSERT_TRUE(test_dfa_separate(s1));
 }

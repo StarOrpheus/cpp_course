@@ -9,7 +9,6 @@
 
 inline size_t byte_pos(size_t bitset_pos) {
     size_t result = (bitset_pos >> dynamic_bitset::block_sz_log);
-
     return result;
 }
 

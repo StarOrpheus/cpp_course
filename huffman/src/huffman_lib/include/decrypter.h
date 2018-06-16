@@ -11,7 +11,6 @@
 
 class decrypter {
     h_tree_DFA dfa;
-    uint32_t current_vertex;
 
 public:
     explicit
