@@ -5,10 +5,14 @@
 #ifndef HUFFMAN_ENCRYPTER_H
 #define HUFFMAN_ENCRYPTER_H
 
+#include <vector>
+
 #include "utils.h"
+#include "dynamic_bitset.h"
+#include "h_tree.h"
 
 class encrypter {
-    vector<dynamic_bitset> codes;
+    std::vector<dynamic_bitset> codes;
 
 public:
     explicit

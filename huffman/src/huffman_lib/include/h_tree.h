@@ -10,6 +10,8 @@
 #include <limits>
 
 #include "utils.h"
+#include "frequency_counter.h"
+#include "dynamic_bitset.h"
 
 using std::shared_ptr;
 using std::weak_ptr;
@@ -57,8 +59,7 @@ public:
 
     vector<dynamic_bitset> code_table() const;
 
-    friend class h_tree_DFA;
+    friend class h_tree_dfa;
 };
-
 
 #endif //HUFFMAN_H_TREE_H

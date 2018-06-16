@@ -7,10 +7,11 @@
 
 #include <vector>
 
-#include "utils.h"
+#include "h_tree_dfa.h"
+#include "dynamic_bitset.h"
 
 class decrypter {
-    h_tree_DFA dfa;
+    h_tree_dfa dfa;
 
 public:
     explicit

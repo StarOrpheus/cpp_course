@@ -1,0 +1,2 @@
+/usr/bin/ar qc libhuffman_lib.a  CMakeFiles/huffman_lib.dir/decrypter.cpp.o CMakeFiles/huffman_lib.dir/encrypter.cpp.o CMakeFiles/huffman_lib.dir/h_tree.cpp.o CMakeFiles/huffman_lib.dir/h_tree_DFA.cpp.o CMakeFiles/huffman_lib.dir/utils.cpp.o CMakeFiles/huffman_lib.dir/dynamic_bitset.cpp.o
+/usr/bin/ranlib libhuffman_lib.a

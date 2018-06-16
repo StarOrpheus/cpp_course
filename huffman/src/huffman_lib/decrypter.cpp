@@ -54,7 +54,7 @@ void decrypter::decrypt(const void *ptr, size_t sz, std::vector<symbol> &result)
     for (size_t i = 0; i < sz; ) {
         if (dfa.condition() == dfa.root() && i + 16 < sz) {
             const uint16_t slice = slice2bytes((const uint8_t *const &) ptr, i);
-            h_tree_DFA::DFA_step const& step = dfa.root_go(slice);
+            h_tree_dfa::DFA_step const& step = dfa.root_go(slice);
 
             i += 16 - step.skipped_bits;
             if (step.symbol_achieved) {
@@ -68,7 +68,7 @@ void decrypter::decrypt(const void *ptr, size_t sz, std::vector<symbol> &result)
 
         if (i + 16 <= sz) {
             const uint16_t slice = slice2bytes((const uint8_t *const &) ptr, i);
-            h_tree_DFA::DFA_step step = dfa.bit_go(slice);
+            h_tree_dfa::DFA_step step = dfa.bit_go(slice);
 
             i += 16 - step.skipped_bits;
             if (step.symbol_achieved) {
@@ -78,7 +78,7 @@ void decrypter::decrypt(const void *ptr, size_t sz, std::vector<symbol> &result)
             continue;
         }
 
-        h_tree_DFA::DFA_step step = dfa.bit_go(ith_bit((const uint8_t *const &) ptr, i));
+        h_tree_dfa::DFA_step step = dfa.bit_go(ith_bit((const uint8_t *const &) ptr, i));
         ++i;
         if (step.symbol_achieved) {
             result.push_back(step.c);
