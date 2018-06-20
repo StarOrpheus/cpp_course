@@ -33,6 +33,8 @@ namespace exam {
         struct c_iterator : std::iterator<std::bidirectional_iterator_tag, const T> {
             set<T> const * current_set = nullptr;
 
+            c_iterator() {}
+
             c_iterator operator++() {
                 ptr = current_set->next(ptr);
                 return *this;
@@ -65,7 +67,7 @@ namespace exam {
             }
 
             T const * operator->() const {
-                return ptr->val;
+                return &(ptr->val);
             }
 
             c_iterator(c_iterator const& rhs) {
@@ -104,11 +106,12 @@ namespace exam {
         node_ptr deep_copy(node_ptr ptr, node_ptr const up_ptr, bool is_left) {
             if (ptr == nullptr) { return nullptr; }
 
-            node_ptr result_root = new tree_node(ptr->val, up_ptr, is_left, ptr->prior);
-            result_root->left.reset(deep_copy(ptr->left.get(), result_root, true));
-            result_root->right.reset(deep_copy(ptr->right.get(), result_root, false));
+            unique_ptr<tree_node> result_root(new tree_node(ptr->val, up_ptr, is_left, ptr->prior));
 
-            return result_root;
+            result_root->left.reset(deep_copy(ptr->left.get(), result_root.get(), true));
+            result_root->right.reset(deep_copy(ptr->right.get(), result_root.get(), false));
+
+            return result_root.release();
         }
 
         node_ptr merge(node_ptr lhs, node_ptr rhs) {
@@ -228,66 +231,25 @@ namespace exam {
         }
 
         const_iterator minimum(node_ptr ptr) const {
-            const_iterator result{ptr, this};
+            node_ptr result = ptr;
 
             while (ptr != nullptr) {
-                result = {ptr, this};
+                result = ptr;
                 ptr = ptr->left.get();
             }
 
-            return result;
-        }
-
-        iterator minimum(node_ptr ptr) {
-            iterator result{ptr, this};
-
-            while (ptr != nullptr) {
-                result = {ptr, this};
-                ptr = ptr->left.get();
-            }
-
-            return result;
+            return {result, this};
         }
 
         const_iterator maximum(node_ptr ptr) const {
-            const_iterator result{ptr, this};
+            node_ptr result = ptr;
 
             while (ptr != nullptr) {
-                result = {ptr, this};
+                result = ptr;
                 ptr = ptr->right.get();
             }
 
-            return result;
-        }
-
-        iterator maximum(node_ptr ptr) {
-            iterator result{ptr, this};
-
-            while (ptr != nullptr) {
-                result = {ptr, this};
-                ptr = ptr->right.get();
-            }
-
-            return result;
-        }
-
-        bool leaf(node_ptr const ptr) const {
-            return ptr->left == nullptr && ptr->right == nullptr;
-        }
-
-        void validate_tree(node_ptr ptr, node_ptr upper, bool is_left) {
-            if (ptr == nullptr) { return; }
-
-            assert(ptr->upper == upper && ptr->is_left == is_left);
-
-            validate_tree(ptr->left.get(), ptr, true);
-            validate_tree(ptr->right.get(), ptr, false);
-        }
-
-        void validate_tree() {
-//            int mx;
-//            int mn;
-            validate_tree(root.get(), nullptr, false);
+            return {result, this};
         }
 
     public:
@@ -300,24 +262,8 @@ namespace exam {
             return maximum(root.get());
         }
 
-        iterator minimum() {
-            return minimum(root.get());
-        }
-
-        iterator maximum() {
-            return maximum(root.get());
-        }
-
-        iterator begin() {
-            return minimum();
-        }
-
         const_iterator begin() const {
             return minimum();
-        }
-
-        iterator end() {
-            return {nullptr, this};
         }
 
         const_iterator end() const {
@@ -328,15 +274,7 @@ namespace exam {
             return minimum();
         }
 
-        const_iterator cbegin() {
-            return minimum();
-        }
-
         const_iterator cend() const {
-            return {nullptr, this};
-        }
-
-        const_iterator cend() {
             return {nullptr, this};
         }
 
@@ -348,9 +286,6 @@ namespace exam {
             return reverse_iterator(end());
         }
 
-        reverse_iterator rend() {
-            return reverse_iterator(begin());
-        }
 
         const_reverse_iterator rend() const {
             return reverse_iterator(begin());
@@ -385,44 +320,30 @@ namespace exam {
         }
 
         std::pair<iterator, bool> insert(T const& val) {
-            validate_tree();
-
-            const_iterator find_test = find(val);
+            const_iterator find_test = find(val); // ok if std::exception was thrown.
             const_iterator end_iter = cend();
             if (find_test != end_iter) {
-                return {iterator(nullptr, this), false};
+                return {end(), false};
             }
 
-            node_ptr new_val = nullptr;
-            try {
-                new_val = new tree_node(T(val), nullptr, false);
-            } catch (...) {
-                validate_tree();
-                return {iterator(nullptr, this), false};
-            }
+            unique_ptr<tree_node> new_val(new tree_node(T(val), nullptr, false)); // ok if std::exception was thrown.
 
             node_ptr v = root.release();
-
-            std::pair<iterator, bool> result = {iterator{new_val, this}, true};
-
+            std::pair<iterator, bool> result = {{new_val.get(), this}, true};
             std::pair<node_ptr, node_ptr> spl;
             try {
                 spl = split(v, val);
             } catch (...) {
                 root.reset(v);
-
-                validate_tree();
-                return {iterator(nullptr, this), false};
+                throw;
             }
 
-            root.reset(merge(merge(spl.first, new_val), spl.second));
+            root.reset(merge(merge(spl.first, new_val.release()), spl.second));
             sz++;
-            validate_tree();
             return result;
         }
 
         iterator erase(const_iterator x) {
-            validate_tree();
             iterator result = x;
             ++result;
 
@@ -446,7 +367,6 @@ namespace exam {
                 root.reset(merge(lhs, rhs));
 
                 --sz;
-                validate_tree();
                 return result;
             }
 
@@ -482,7 +402,6 @@ namespace exam {
             }
 
             --sz;
-            validate_tree();
             return result;
         }
 
@@ -543,6 +462,10 @@ namespace exam {
 
         bool empty() const {
             return (sz == 0);
+        }
+
+        const size_t size() const {
+            return sz;
         }
 
         void clear() {

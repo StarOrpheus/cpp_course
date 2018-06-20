@@ -760,5 +760,75 @@ TEST(exceptions, no_throw) {
     } catch (...) {
         ASSERT_TRUE(false);
     }
+}
 
+struct failure_obj {
+    static bool ctor_fail;
+    static bool ctor_copy_fail;
+    static bool assign_fail;
+    static bool less_fail;
+
+    static void set_flags(uint8_t mask) {
+        ctor_fail = (mask & (1u << 0u)) != 0;
+        ctor_copy_fail = (mask & (1u << 1u)) != 0;
+        assign_fail = (mask & (1u << 2u)) != 0;
+        less_fail = (mask & (1u << 3u)) != 0;
+    }
+
+    int val;
+
+    failure_obj(int val) {
+        if  (ctor_fail) {
+            throw std::logic_error("Ctor failing");
+        }
+
+        this->val = val;
+    }
+
+    failure_obj(failure_obj const& e) {
+        if (ctor_copy_fail) {
+            throw std::logic_error("Copy ctor failing");
+        }
+
+        val = e.val;
+    }
+
+    failure_obj & operator=(failure_obj const& rhs) {
+        if (assign_fail) {
+            throw std::logic_error("Assignment operator failing");
+        }
+
+        val = rhs.val;
+
+        return *this;
+    }
+
+    friend bool operator<(failure_obj const& lhs, failure_obj const& rhs) {
+        if (less_fail) {
+            throw std::logic_error("Less operator failing");
+        }
+
+        return lhs.val < rhs.val;
+    }
+};
+
+bool failure_obj::ctor_fail = false;
+bool failure_obj::ctor_copy_fail = false;
+bool failure_obj::assign_fail = false;
+bool failure_obj::less_fail = false;
+
+TEST(exception_safety, no_def_ctor) {
+    set<failure_obj> st;
+    mass_push_back(st, {0, 4, 2, 4, 6});
+    ASSERT_TRUE(st.size() == 4);
+    st.erase(st.find(0));
+    ASSERT_TRUE(st.size() == 3);
+    st.erase(st.find(6));
+    ASSERT_TRUE(st.size() == 2);
+    st.erase(st.find(3));
+    ASSERT_TRUE(st.size() == 2);
+    st.erase(st.find(4));
+    ASSERT_TRUE(st.size() == 1);
+    st.erase(st.find(2));
+    ASSERT_TRUE(st.size() == 0);
 }
