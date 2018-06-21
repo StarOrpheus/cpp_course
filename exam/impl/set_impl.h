@@ -33,7 +33,7 @@ namespace exam {
         struct c_iterator : std::iterator<std::bidirectional_iterator_tag, const T> {
             set<T> const * current_set = nullptr;
 
-            c_iterator() {}
+            c_iterator() = default;
 
             c_iterator operator++() {
                 ptr = current_set->next(ptr);
@@ -50,13 +50,13 @@ namespace exam {
                 return *this;
             }
 
-            c_iterator operator++(int) {
+            const c_iterator operator++(int) {
                 c_iterator result(*this);
                 operator++();
                 return result;
             }
 
-            c_iterator operator--(int) {
+            const c_iterator operator--(int) {
                 c_iterator result(*this);
                 operator--();
                 return result;
@@ -166,6 +166,7 @@ namespace exam {
                     spl1 = split(lhs, key);
                 } catch (...) {
                     root->left.reset(lhs);
+                    throw;
                 }
                 root->left.reset(spl1.second);
 
@@ -181,10 +182,6 @@ namespace exam {
         unique_ptr<tree_node> root;
         size_t sz;
         std::less<T> t_less;
-
-        bool t_greater(T const& lhs, T const& rhs) const {
-            return rhs < lhs;
-        }
 
         bool t_equal(T const& lhs, T const& rhs) const {
             return !(lhs < rhs || rhs < lhs);
@@ -320,10 +317,10 @@ namespace exam {
         }
 
         std::pair<iterator, bool> insert(T const& val) {
-            const_iterator find_test = find(val); // ok if std::exception was thrown.
-            const_iterator end_iter = cend();
+            iterator find_test = find(val); // ok if std::exception was thrown.
+            iterator end_iter = cend();
             if (find_test != end_iter) {
-                return {end(), false};
+                return {find_test, false};
             }
 
             unique_ptr<tree_node> new_val(new tree_node(T(val), nullptr, false)); // ok if std::exception was thrown.
